@@ -1,24 +1,13 @@
-import AppleHealthKit, {
-  HealthInputOptions,
-  HealthKitPermissions,
-} from 'react-native-health';
-import { useEffect, useState } from 'react';
-import { Platform } from 'react-native';
+import AppleHealthKit, { HealthInputOptions, HealthKitPermissions } from "react-native-health";
+import { useEffect, useState } from "react";
+import { Platform } from "react-native";
 
-import {
-  initialize,
-  requestPermission,
-  readRecords,
-} from 'react-native-health-connect';
-import { TimeRangeFilter } from 'react-native-health-connect/lib/typescript/types/base.types';
+import { initialize, requestPermission, readRecords } from "react-native-health-connect";
+import { TimeRangeFilter } from "react-native-health-connect/lib/typescript/types/base.types";
 
 const permissions: HealthKitPermissions = {
   permissions: {
-    read: [
-      AppleHealthKit.Constants.Permissions.Steps,
-      AppleHealthKit.Constants.Permissions.FlightsClimbed,
-      AppleHealthKit.Constants.Permissions.DistanceWalkingRunning,
-    ],
+    read: [AppleHealthKit.Constants.Permissions.Steps, AppleHealthKit.Constants.Permissions.FlightsClimbed, AppleHealthKit.Constants.Permissions.DistanceWalkingRunning],
     write: [],
   },
 };
@@ -29,29 +18,32 @@ const useHealthData = (date: Date) => {
   const [flights, setFlights] = useState(0);
   const [distance, setDistance] = useState(0);
 
-  // iOS - HealthKit
-  useEffect(() => {
-    if (Platform.OS !== 'ios') {
-      return;
-    }
-
+  async function AppleHealth() {
     AppleHealthKit.isAvailable((err, isAvailable) => {
       if (err) {
-        console.log('Error checking availability');
+        console.log("Error checking availability");
         return;
       }
       if (!isAvailable) {
-        console.log('Apple Health not available');
+        console.log("Apple Health not available");
         return;
       }
       AppleHealthKit.initHealthKit(permissions, (err) => {
         if (err) {
-          console.log('Error getting permissions');
+          console.log("Error getting permissions");
           return;
         }
         setHasPermission(true);
       });
     });
+  }
+
+  // iOS - HealthKit
+  useEffect(() => {
+    if (Platform.OS !== "ios") {
+      return;
+    }
+    AppleHealth();
   }, []);
 
   useEffect(() => {
@@ -66,7 +58,7 @@ const useHealthData = (date: Date) => {
 
     AppleHealthKit.getStepCount(options, (err, results) => {
       if (err) {
-        console.log('Error getting the steps');
+        console.log("Error getting the steps");
         return;
       }
       setSteps(results.value);
@@ -74,7 +66,7 @@ const useHealthData = (date: Date) => {
 
     AppleHealthKit.getFlightsClimbed(options, (err, results) => {
       if (err) {
-        console.log('Error getting the steps:', err);
+        console.log("Error getting the steps:", err);
         return;
       }
       setFlights(results.value);
@@ -82,7 +74,7 @@ const useHealthData = (date: Date) => {
 
     AppleHealthKit.getDistanceWalkingRunning(options, (err, results) => {
       if (err) {
-        console.log('Error getting the steps:', err);
+        console.log("Error getting the steps:", err);
         return;
       }
       setDistance(results.value);
@@ -99,32 +91,29 @@ const useHealthData = (date: Date) => {
 
     // request permissions
     await requestPermission([
-      { accessType: 'read', recordType: 'Steps' },
-      { accessType: 'read', recordType: 'Distance' },
-      { accessType: 'read', recordType: 'FloorsClimbed' },
+      { accessType: "read", recordType: "Steps" },
+      { accessType: "read", recordType: "Distance" },
+      { accessType: "read", recordType: "FloorsClimbed" },
     ]);
 
     const timeRangeFilter: TimeRangeFilter = {
-      operator: 'between',
+      operator: "between",
       startTime: new Date(date.setHours(0, 0, 0, 0)).toISOString(),
       endTime: new Date(date.setHours(23, 59, 59, 999)).toISOString(),
     };
 
     // Steps
-    const steps = await readRecords('Steps', { timeRangeFilter });
+    const steps = await readRecords("Steps", { timeRangeFilter });
     const totalSteps = steps.reduce((sum, cur) => sum + cur.count, 0);
     setSteps(totalSteps);
 
     // Distance
-    const distance = await readRecords('Distance', { timeRangeFilter });
-    const totalDistance = distance.reduce(
-      (sum, cur) => sum + cur.distance.inMeters,
-      0
-    );
+    const distance = await readRecords("Distance", { timeRangeFilter });
+    const totalDistance = distance.reduce((sum, cur) => sum + cur.distance.inMeters, 0);
     setDistance(totalDistance);
 
     // Floors climbed
-    const floorsClimbed = await readRecords('FloorsClimbed', {
+    const floorsClimbed = await readRecords("FloorsClimbed", {
       timeRangeFilter,
     });
     const totalFloors = floorsClimbed.reduce((sum, cur) => sum + cur.floors, 0);
@@ -133,7 +122,7 @@ const useHealthData = (date: Date) => {
   };
 
   useEffect(() => {
-    if (Platform.OS !== 'android') {
+    if (Platform.OS !== "android") {
       return;
     }
     readSampleData();
